@@ -1,0 +1,37 @@
+name: CI – Build & Validate
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest        # WPF requires Windows
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 📦 Restore NuGet packages
+        run: dotnet restore Assignment1_Prog.csproj
+
+      - name: 🏗️ Build – Release
+        run: dotnet build Assignment1_Prog.csproj --configuration Release --no-restore
+
+      - name: ✅ Verify executable exists
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter "*.exe" | Select-Object -First 1
+          if ($exe) {
+            Write-Host "✅ Build succeeded: $($exe.FullName)"
+          } else {
+            Write-Error "❌ No executable found – build may have failed"
+            exit 1
+          }
